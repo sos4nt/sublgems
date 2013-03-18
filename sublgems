@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+# handle early ctrl-c
+Signal.trap("INT") { exit 1 }
+
+require 'bundler'
+require 'json'
+
+folders = Bundler.load.specs.sort_by { |s| s.name }.map do |s|
+  {
+    name: "#{s.name} (#{s.version}#{s.git_version})",
+    path: s.full_gem_path
+  }
+end
+
+project_settings = { folders: folders }
+
+project_file = Bundler.root.join("tmp", "gems.sublime-project")
+
+FileUtils.mkdir_p(project_file.dirname)
+
+File.open(project_file, "w") do |f|
+  f.write(JSON.pretty_generate(project_settings))
+end
+
+exec("subl --project '#{project_file}'")
